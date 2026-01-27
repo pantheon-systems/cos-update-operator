@@ -8,7 +8,7 @@ require (
 	github.com/coreos/locksmith v0.6.2-0.20171013225126-ef4279232ecd
 	github.com/coreos/pkg v0.0.0-20180108230652-97fdf19511ea
 	github.com/godbus/dbus v4.1.0+incompatible
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/golang/glog v1.2.5
 	github.com/golang/mock v1.6.0
 	github.com/lytics/slackhook v0.0.0-20160630154540-a52fd449b27d
 	github.com/pkg/errors v0.9.1
@@ -25,7 +25,7 @@ require (
 	github.com/gogo/protobuf v0.0.0-20171007142547-342cbe0a0415 // indirect
 	github.com/golang/groupcache v0.0.0-20160516000752-02826c3e7903 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
+	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
