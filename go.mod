@@ -1,6 +1,6 @@
 module github.com/pantheon-systems/cos-update-operator
 
-go 1.17
+go 1.23
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
@@ -12,7 +12,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/lytics/slackhook v0.0.0-20160630154540-a52fd449b27d
 	github.com/pkg/errors v0.9.1
-	google.golang.org/protobuf v1.28.0
+	google.golang.org/protobuf v1.36.11
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v0.0.0
@@ -25,7 +25,7 @@ require (
 	github.com/gogo/protobuf v0.0.0-20171007142547-342cbe0a0415 // indirect
 	github.com/golang/groupcache v0.0.0-20160516000752-02826c3e7903 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
 	github.com/hashicorp/golang-lru v0.5.0 // indirect
