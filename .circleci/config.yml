@@ -4,7 +4,7 @@ version: 2.1
 executors:
   go-build:
     docker:
-      - image: cimg/go:1.23
+      - image: cimg/go:1.25
 
 commands:
   save-go-mod-cache:

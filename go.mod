@@ -1,8 +1,6 @@
 module github.com/pantheon-systems/cos-update-operator
 
-go 1.23
-
-toolchain go1.23.9
+go 1.25.3
 
 require (
 	github.com/blang/semver v3.5.1+incompatible
