@@ -18,8 +18,8 @@ GOFLAGS := -ldflags=-w
 GOFLAGS := $(GOFLAGS) -ldflags=-X=$(REPO)/pkg/version.Version=$(RELEASE_VERSION)
 GOFLAGS := "$(GOFLAGS) -ldflags=-X=$(REPO)/pkg/version.Commit=$(COMMIT)"
 
-OPERATOR_IMAGE_REPO ?= quay.io/getpantheon/cos-update-operator
-AGENT_IMAGE_REPO ?= quay.io/getpantheon/cos-update-operator-agent
+OPERATOR_IMAGE_REPO ?= us-docker.pkg.dev/pantheon-artifacts/internal/cos-update-operator
+AGENT_IMAGE_REPO ?= us-docker.pkg.dev/pantheon-artifacts/internal/cos-update-operator-agent
 
 KUBE_NAMESPACE ?= $(shell kubectl config get-contexts \
     | grep $(kubectl config current-context) | awk '{ print $NF}')
@@ -40,7 +40,8 @@ test: deps
 bin/*: deps
 
 tools:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.44.0
+	@GOBIN=$$(go env GOPATH)/bin; \
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$GOBIN v1.62.2
 	go install "github.com/ory/go-acc@latest"
 
 deps: tools proto

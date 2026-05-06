@@ -114,7 +114,7 @@ type Kontroller struct {
 	beforeRebootAnnotations []string
 	afterRebootAnnotations  []string
 
-	leaderElectionClient        v1core.ConfigMapsGetter
+	leaderElectionKubeClient    kubernetes.Interface
 	leaderElectionEventRecorder record.EventRecorder
 	// namespace is the kubernetes namespace any resources (e.g. locks,
 	// configmaps, agents) should be created and read under.
@@ -190,9 +190,7 @@ func New(config Config) (*Kontroller, error) {
 
 	namespace := os.Getenv("POD_NAMESPACE")
 	if namespace == "" {
-		msg := "unable to determine operator namespace:" +
-			" please ensure POD_NAMESPACE environment variable is set"
-		return nil, fmt.Errorf(msg)
+		return nil, fmt.Errorf("unable to determine operator namespace: please ensure POD_NAMESPACE environment variable is set")
 	}
 
 	var rebootWindow *timeutil.Periodic
@@ -219,7 +217,7 @@ func New(config Config) (*Kontroller, error) {
 		er:                          er,
 		beforeRebootAnnotations:     config.BeforeRebootAnnotations,
 		afterRebootAnnotations:      config.AfterRebootAnnotations,
-		leaderElectionClient:        kc.CoreV1(),
+		leaderElectionKubeClient:    kc,
 		leaderElectionEventRecorder: leaderElectionEventRecorder,
 		namespace:                   namespace,
 		autoLabelContainerLinux:     config.AutoLabelContainerLinux,
@@ -275,16 +273,19 @@ func (k *Kontroller) withLeaderElection() error {
 		return err
 	}
 
-	resLock := &resourcelock.ConfigMapLock{
-		ConfigMapMeta: v1meta.ObjectMeta{
-			Namespace: k.namespace,
-			Name:      leaderElectionResourceName,
-		},
-		Client: k.leaderElectionClient,
-		LockConfig: resourcelock.ResourceLockConfig{
+	resLock, err := resourcelock.New(
+		resourcelock.LeasesResourceLock,
+		k.namespace,
+		leaderElectionResourceName,
+		k.leaderElectionKubeClient.CoreV1(),
+		k.leaderElectionKubeClient.CoordinationV1(),
+		resourcelock.ResourceLockConfig{
 			Identity:      id,
 			EventRecorder: k.leaderElectionEventRecorder,
 		},
+	)
+	if err != nil {
+		return err
 	}
 
 	waitLeading := make(chan struct{})
@@ -375,7 +376,7 @@ func (k *Kontroller) process() {
 // If there is an error getting the list of nodes or updating any of them, an
 // error is immediately returned.
 func (k *Kontroller) cleanupState() error {
-	nodelist, err := k.nc.List(v1meta.ListOptions{})
+	nodelist, err := k.nc.List(context.TODO(), v1meta.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed listing nodes: %v", err)
 	}
@@ -415,7 +416,7 @@ func (k *Kontroller) cleanupState() error {
 // If there is an error getting the list of nodes or updating any of them, an
 // error is immediately returned.
 func (k *Kontroller) checkBeforeReboot() error {
-	nodelist, err := k.nc.List(v1meta.ListOptions{})
+	nodelist, err := k.nc.List(context.TODO(), v1meta.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed listing nodes: %v", err)
 	}
@@ -468,7 +469,7 @@ func (k *Kontroller) checkBeforeReboot() error {
 // If there is an error getting the list of nodes or updating any of them, an
 // error is immediately returned.
 func (k *Kontroller) checkAfterReboot() error {
-	nodelist, err := k.nc.List(v1meta.ListOptions{})
+	nodelist, err := k.nc.List(context.TODO(), v1meta.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed listing nodes: %v", err)
 	}
@@ -521,7 +522,7 @@ func (k *Kontroller) checkAfterReboot() error {
 // If there is an error getting the list of nodes or updating any of them, an
 // error is immediately returned.
 func (k *Kontroller) markBeforeReboot() error {
-	nodelist, err := k.nc.List(v1meta.ListOptions{})
+	nodelist, err := k.nc.List(context.TODO(), v1meta.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed listing nodes: %v", err)
 	}
@@ -596,7 +597,7 @@ func (k *Kontroller) markBeforeReboot() error {
 // If there is an error getting the list of nodes or updating any of them, an
 // error is immediately returned.
 func (k *Kontroller) markAfterReboot() error {
-	nodelist, err := k.nc.List(v1meta.ListOptions{})
+	nodelist, err := k.nc.List(context.TODO(), v1meta.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("Failed listing nodes: %v", err)
 	}

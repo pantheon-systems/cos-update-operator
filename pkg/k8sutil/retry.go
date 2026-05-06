@@ -19,9 +19,11 @@ limitations under the License.
 package k8sutil
 
 import (
+	"context"
+	"errors"
 	"time"
 
-	"k8s.io/apimachinery/pkg/api/errors"
+	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -67,14 +69,14 @@ func RetryOnConflict(backoff wait.Backoff, fn func() error) error {
 		switch {
 		case err == nil:
 			return true, nil
-		case errors.IsConflict(err):
+		case kerrors.IsConflict(err):
 			lastConflictErr = err
 			return false, nil
 		default:
 			return false, err
 		}
 	})
-	if err == wait.ErrWaitTimeout {
+	if errors.Is(err, context.DeadlineExceeded) {
 		err = lastConflictErr
 	}
 	return err
@@ -84,12 +86,12 @@ func RetryOnConflict(backoff wait.Backoff, fn func() error) error {
 func RetryOnError(backoff wait.Backoff, fn func() error) error {
 	var lastErr error
 	err := wait.ExponentialBackoff(backoff, func() (bool, error) {
-		lastErr := fn()
+		lastErr = fn()
 
 		return lastErr == nil, nil
 	})
 
-	if err == wait.ErrWaitTimeout {
+	if errors.Is(err, context.DeadlineExceeded) {
 		err = lastErr
 	}
 	return err

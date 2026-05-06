@@ -1,6 +1,7 @@
 package k8sutil
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -43,19 +44,19 @@ func TestUpdateNodeRetryHandlesConflict(t *testing.T) {
 	mockNode.SetAnnotations(map[string]string{"counter": "20"})
 	mockNode.SetResourceVersion("20")
 
-	mockNi.EXPECT().Get("mock_node", v1meta.GetOptions{}).Return(mockNode, nil).AnyTimes()
+	mockNi.EXPECT().Get(gomock.Any(), "mock_node", v1meta.GetOptions{}).Return(mockNode, nil).AnyTimes()
 
 	// Conflict once; mock that a third party incremented the counter from '20'
 	// to '21' right after the node is returned
 	gomock.InOrder(
-		mockNi.EXPECT().Update(mockNode).Do(func(n *v1api.Node) {
+		mockNi.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Do(func(ctx context.Context, n *v1api.Node, opts v1meta.UpdateOptions) {
 			// Fake conflict; the counter was incremented elsewhere; resourceVersion is now 21
 			mockNode.SetAnnotations(map[string]string{"counter": "21"})
 			mockNode.SetResourceVersion("21")
 		}).Return(mockNode, errors.NewConflict(schema.GroupResource{}, "mock_node", fmt.Errorf("err"))),
 
 		// And then the successful retry
-		mockNi.EXPECT().Update(mockNode).Return(mockNode, nil),
+		mockNi.EXPECT().Update(gomock.Any(), gomock.Any(), gomock.Any()).Return(mockNode, nil),
 	)
 
 	err := UpdateNodeRetry(mockNi, "mock_node", atomicCounterIncrement)
