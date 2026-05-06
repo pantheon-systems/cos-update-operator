@@ -7,6 +7,14 @@ ifneq ($(VERSION), $(RELEASE_VERSION))
     VERSION := $(RELEASE_VERSION)-$(VERSION)
 endif
 
+# GitHub Actions versioning: use hash-hhmm format
+ifneq ($(GITHUB_ACTIONS),)
+    SHORT_COMMIT := $(shell git rev-parse --short=7 HEAD)
+    TIMESTAMP := $(shell date -u +%H%M)
+    VERSION := $(SHORT_COMMIT)-$(TIMESTAMP)
+endif
+
+# CircleCI versioning (kept for backwards compatibility)
 ifneq ($(CIRCLE_BRANCH),)
     BRANCH_LAST_PART := $(lastword $(subst /, ,$(CIRCLE_BRANCH)))
     VERSION := $(CIRCLE_BUILD_NUM)-$(BRANCH_LAST_PART)
@@ -18,8 +26,8 @@ GOFLAGS := -ldflags=-w
 GOFLAGS := $(GOFLAGS) -ldflags=-X=$(REPO)/pkg/version.Version=$(RELEASE_VERSION)
 GOFLAGS := "$(GOFLAGS) -ldflags=-X=$(REPO)/pkg/version.Commit=$(COMMIT)"
 
-OPERATOR_IMAGE_REPO ?= us-docker.pkg.dev/pantheon-artifacts/internal/cos-update-operator
-AGENT_IMAGE_REPO ?= us-docker.pkg.dev/pantheon-artifacts/internal/cos-update-operator-agent
+OPERATOR_IMAGE_REPO ?= ghcr.io/pantheon-systems/cos-update-operator
+AGENT_IMAGE_REPO ?= ghcr.io/pantheon-systems/cos-update-operator-agent
 
 KUBE_NAMESPACE ?= $(shell kubectl config get-contexts \
     | grep $(kubectl config current-context) | awk '{ print $NF}')
@@ -81,14 +89,16 @@ image: operator-image
 
 push-agent: agent-image
 	docker push $(AGENT_IMAGE_REPO):$(VERSION)
-ifeq ($(CIRCLE_BRANCH),master)
+# Tag as 'master' if on master branch (CircleCI or GitHub Actions)
+ifneq ($(filter master main,$(CIRCLE_BRANCH) $(GITHUB_REF_NAME)),)
 	docker tag $(AGENT_IMAGE_REPO):$(VERSION) $(AGENT_IMAGE_REPO):master
 	docker push $(AGENT_IMAGE_REPO):master
 endif
 
 push-operator: operator-image
 	docker push $(OPERATOR_IMAGE_REPO):$(VERSION)
-ifeq ($(CIRCLE_BRANCH),master)
+# Tag as 'master' if on master branch (CircleCI or GitHub Actions)
+ifneq ($(filter master main,$(CIRCLE_BRANCH) $(GITHUB_REF_NAME)),)
 	docker tag $(OPERATOR_IMAGE_REPO):$(VERSION) $(OPERATOR_IMAGE_REPO):master
 	docker push $(OPERATOR_IMAGE_REPO):master
 endif
