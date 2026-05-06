@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 
@@ -188,7 +188,7 @@ func getUpdateMap() (map[string]string, error) {
 		return nil, err
 	}
 
-	b, err := ioutil.ReadAll(uconf)
+	b, err := io.ReadAll(uconf)
 	uconf.Close()
 	if err != nil {
 		return nil, err
@@ -202,7 +202,7 @@ func getUpdateMap() (map[string]string, error) {
 		glog.Infof("Skipping missing update.conf: %v", err)
 	}
 
-	b, err = ioutil.ReadAll(econf)
+	b, err = io.ReadAll(econf)
 	econf.Close()
 	if err == nil {
 		splitNewlineEnv(infomap, string(b))
@@ -221,7 +221,7 @@ func getReleaseMap() (map[string]string, error) {
 	}
 
 	defer osrelease.Close()
-	b, err := ioutil.ReadAll(osrelease)
+	b, err := io.ReadAll(osrelease)
 	osrelease.Close()
 	if err != nil {
 		return nil, err

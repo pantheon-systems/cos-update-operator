@@ -270,14 +270,14 @@ func (k *Klocksmith) updateStatusCallback(s *updateengine.StatusResult) {
 		labels[constants.LabelRebootNeeded] = constants.True
 	}
 
-	err := wait.PollUntil(defaultPollInterval, func() (bool, error) {
+	err := wait.PollUntilContextCancel(context.Background(), defaultPollInterval, true, func(ctx context.Context) (bool, error) {
 		if ierr := k8sutil.SetNodeAnnotationsLabels(k.nc, k.node, anno, labels); ierr != nil {
 			glog.Errorf("Failed to set annotation %q: %v", constants.AnnotationStatus, ierr)
 			return false, nil
 		}
 
 		return true, nil
-	}, wait.NeverStop)
+	})
 
 	if err != nil {
 		glog.Errorf("polling until set annotations and labels on update status failed: %v", err)
@@ -442,8 +442,10 @@ func (k *Klocksmith) getPodsForDeletion() ([]v1.Pod, error) {
 
 // waitForPodDeletion waits for a pod to be deleted
 func (k *Klocksmith) waitForPodDeletion(pod v1.Pod) error {
-	return wait.PollImmediate(defaultPollInterval, k.reapTimeout, func() (bool, error) {
-		p, err := k.kc.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, v1meta.GetOptions{})
+	ctx, cancel := context.WithTimeout(context.Background(), k.reapTimeout)
+	defer cancel()
+	return wait.PollUntilContextTimeout(ctx, defaultPollInterval, k.reapTimeout, true, func(ctx context.Context) (bool, error) {
+		p, err := k.kc.CoreV1().Pods(pod.Namespace).Get(ctx, pod.Name, v1meta.GetOptions{})
 		if k8serrors.IsNotFound(err) || (p != nil && p.ObjectMeta.UID != pod.ObjectMeta.UID) {
 			glog.Infof("Deleted pod %q", pod.Name)
 			return true, nil

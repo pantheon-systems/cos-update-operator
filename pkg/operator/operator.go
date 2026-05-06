@@ -190,9 +190,7 @@ func New(config Config) (*Kontroller, error) {
 
 	namespace := os.Getenv("POD_NAMESPACE")
 	if namespace == "" {
-		msg := "unable to determine operator namespace:" +
-			" please ensure POD_NAMESPACE environment variable is set"
-		return nil, fmt.Errorf(msg)
+		return nil, fmt.Errorf("unable to determine operator namespace: please ensure POD_NAMESPACE environment variable is set")
 	}
 
 	var rebootWindow *timeutil.Periodic
