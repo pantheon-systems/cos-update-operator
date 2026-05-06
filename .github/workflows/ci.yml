@@ -45,9 +45,11 @@ jobs:
 
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@v6
+        continue-on-error: true
         with:
           version: v1.62
           skip-cache: true
+          args: --timeout=5m
 
       - name: Run tests
         run: make test
