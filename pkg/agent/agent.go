@@ -103,7 +103,7 @@ func (k *Klocksmith) process(stop <-chan struct{}) error {
 	}
 
 	glog.Info("Checking annotations")
-	node, err := k.nc.Get(k.node, v1meta.GetOptions{})
+	node, err := k.nc.Get(context.TODO(), k.node, v1meta.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get node %q: %v", node, err)
 	}
@@ -219,7 +219,7 @@ func (k *Klocksmith) process(stop <-chan struct{}) error {
 	deleteOptions := &v1meta.DeleteOptions{}
 	for _, pod := range pods {
 		glog.Infof("Terminating pod %q...", pod.Name)
-		if err := k.kc.CoreV1().Pods(pod.Namespace).Delete(pod.Name, deleteOptions); err != nil {
+		if err := k.kc.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, *deleteOptions); err != nil {
 			glog.Errorf("failed terminating pod %q: %v", pod.Name, err)
 			// Continue anyways, the reboot should terminate it
 		}
@@ -324,7 +324,7 @@ func (k *Klocksmith) watchUpdateStatus(update func(s *updateengine.StatusResult)
 
 // waitForOkToReboot waits for both 'ok-to-reboot' and 'needs-reboot' to be true.
 func (k *Klocksmith) waitForOkToReboot() error {
-	n, err := k.nc.Get(k.node, v1meta.GetOptions{})
+	n, err := k.nc.Get(context.TODO(), k.node, v1meta.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get self node (%q): %v", k.node, err)
 	}
@@ -344,7 +344,7 @@ func (k *Klocksmith) waitForOkToReboot() error {
 	defer cancel()
 	// hopefully 24 hours is enough time between indicating we need a
 	// reboot and the controller telling us to do it
-	ev, err := watch.ListWatchUntil(ctx, lw, k8sutil.NodeAnnotationCondition(shouldRebootSelector))
+	ev, err := watch.UntilWithSync(ctx, lw, &v1.Node{}, nil, k8sutil.NodeAnnotationCondition(shouldRebootSelector))
 	if err != nil {
 		return fmt.Errorf("waiting for annotation %q failed: %v", constants.AnnotationOkToReboot, err)
 	}
@@ -363,7 +363,7 @@ func (k *Klocksmith) waitForOkToReboot() error {
 }
 
 func (k *Klocksmith) waitForNotOkToReboot() error {
-	n, err := k.nc.Get(k.node, v1meta.GetOptions{})
+	n, err := k.nc.Get(context.TODO(), k.node, v1meta.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get self node (%q): %v", k.node, err)
 	}
@@ -404,7 +404,7 @@ func (k *Klocksmith) waitForNotOkToReboot() error {
 		}
 		return false, nil
 	}
-	ev, err := watch.ListWatchUntil(ctx, lw, watch.ConditionFunc(condition))
+	ev, err := watch.UntilWithSync(ctx, lw, &v1.Node{}, nil, watch.ConditionFunc(condition))
 	if err != nil {
 		return fmt.Errorf(
 			"waiting for annotation %q failed: %v",
@@ -443,7 +443,7 @@ func (k *Klocksmith) getPodsForDeletion() ([]v1.Pod, error) {
 // waitForPodDeletion waits for a pod to be deleted
 func (k *Klocksmith) waitForPodDeletion(pod v1.Pod) error {
 	return wait.PollImmediate(defaultPollInterval, k.reapTimeout, func() (bool, error) {
-		p, err := k.kc.CoreV1().Pods(pod.Namespace).Get(pod.Name, v1meta.GetOptions{})
+		p, err := k.kc.CoreV1().Pods(pod.Namespace).Get(context.TODO(), pod.Name, v1meta.GetOptions{})
 		if k8serrors.IsNotFound(err) || (p != nil && p.ObjectMeta.UID != pod.ObjectMeta.UID) {
 			glog.Infof("Deleted pod %q", pod.Name)
 			return true, nil
@@ -470,7 +470,7 @@ func (k *Klocksmith) waitForPodWithLabel() error {
 		glog.Infof("Waiting for pod running on this node matching label: %s", k.waitForPodLabel)
 		time.Sleep(defaultPollInterval)
 
-		podList, err := k.kc.CoreV1().Pods(v1.NamespaceAll).List(v1meta.ListOptions{
+		podList, err := k.kc.CoreV1().Pods(v1.NamespaceAll).List(context.TODO(), v1meta.ListOptions{
 			FieldSelector: fields.SelectorFromSet(fields.Set{"spec.nodeName": k.node}).String(),
 			LabelSelector: k.waitForPodLabel,
 		})
@@ -492,7 +492,7 @@ func (k *Klocksmith) waitForNodeReady() error {
 		glog.Info("Waiting for node to be ready")
 		time.Sleep(defaultPollInterval)
 
-		node, err := k.kc.CoreV1().Nodes().Get(k.node, v1meta.GetOptions{})
+		node, err := k.kc.CoreV1().Nodes().Get(context.TODO(), k.node, v1meta.GetOptions{})
 		if err != nil {
 			return errors.Wrapf(err, "failed to get node: %s", k.node)
 		}
