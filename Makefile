@@ -40,7 +40,8 @@ test: deps
 bin/*: deps
 
 tools:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin v1.44.0
+	@GOBIN=$$(go env GOPATH)/bin; \
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$GOBIN v1.62.2
 	go install "github.com/ory/go-acc@latest"
 
 deps: tools proto

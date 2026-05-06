@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - 'vuln/**'
   pull_request:
 
 env:
@@ -38,11 +37,16 @@ jobs:
           git config --global user.email ci@github.com
           git config --global user.name ci
 
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62
+
       - name: Run make master-sha
         run: make master-sha
 
-      - name: Run tests and linting
-        run: make
+      - name: Run tests
+        run: make test
 
   release:
     name: Build and Push Images
