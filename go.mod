@@ -8,7 +8,7 @@ require (
 	github.com/coreos/locksmith v0.6.2-0.20171013225126-ef4279232ecd
 	github.com/coreos/pkg v0.0.0-20180108230652-97fdf19511ea
 	github.com/godbus/dbus v4.1.0+incompatible
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
+	github.com/golang/glog v1.2.4
 	github.com/golang/mock v1.6.0
 	github.com/lytics/slackhook v0.0.0-20160630154540-a52fd449b27d
 	github.com/pkg/errors v0.9.1
@@ -44,7 +44,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/net v0.26.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/term v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
