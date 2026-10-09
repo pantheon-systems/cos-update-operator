@@ -8,6 +8,6 @@ metadata:
   annotations:
     "backstage.io/techdocs-ref": "dir:docs/"
 spec:
-  type: "unknown"
+  type: "gcp-service"
   lifecycle: "experimental"
   owner: "platform-infrastructure-engineering"
