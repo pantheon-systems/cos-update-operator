@@ -44,7 +44,7 @@ jobs:
         run: make proto
 
       - name: Install golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         continue-on-error: true
         with:
           version: v1.62
